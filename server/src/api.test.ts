@@ -103,6 +103,14 @@ describe('机房写接口', () => {
     expect(res.json().room.startDate).toBe('2026-11-11');
   });
 
+  it('阶段登记 meta 可写入并读回', async () => {
+    const res = await app.inject({ method: 'PATCH', url: '/api/rooms/syd2a/stages/3/meta', headers: op, payload: { key: 'owner', value: '曲强' } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().room.stages[3].meta.owner).toBe('曲强');
+    const cleared = await app.inject({ method: 'PATCH', url: '/api/rooms/syd2a/stages/3/meta', headers: op, payload: { key: 'owner', value: '' } });
+    expect(cleared.json().room.stages[3].meta.owner).toBeUndefined();
+  });
+
   it('非法状态与不存在的子项返回 400', async () => {
     const bad = await app.inject({ method: 'PUT', url: '/api/rooms/wlby/stages/0', headers: op, payload: { status: 'nope' } });
     expect(bad.statusCode).toBe(400);

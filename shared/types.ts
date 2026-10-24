@@ -46,6 +46,8 @@ export interface BuildoutStage {
   index: number;
   status: StageStatus;
   fields: Record<string, string>;
+  /** 阶段登记：owner / plan / done / note，手工填写。 */
+  meta?: Record<string, string>;
 }
 
 export interface DeliveryStage {

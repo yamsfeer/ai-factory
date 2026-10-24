@@ -75,6 +75,8 @@ export const api = {
     request<RoomDetailPayload>(`/api/rooms/${id}/stages/${index}`, { method: 'PUT', body: JSON.stringify({ status }) }),
   setStageField: (id: string, index: number, itemId: string, value: string) =>
     request<RoomDetailPayload>(`/api/rooms/${id}/stages/${index}/fields`, { method: 'PATCH', body: JSON.stringify({ itemId, value }) }),
+  setStageMeta: (id: string, index: number, key: string, value: string) =>
+    request<RoomDetailPayload>(`/api/rooms/${id}/stages/${index}/meta`, { method: 'PATCH', body: JSON.stringify({ key, value }) }),
   setEnvStatus: (id: string, key: string, status: string) =>
     request<RoomDetailPayload>(`/api/rooms/${id}/env/${encodeURIComponent(key)}`, { method: 'PUT', body: JSON.stringify({ status }) }),
   addEnvItem: (id: string, name: string, category: string) =>

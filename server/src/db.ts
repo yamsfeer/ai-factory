@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS room_stages (
   stage_index INTEGER NOT NULL,
   status TEXT NOT NULL,
   fields TEXT NOT NULL,
+  meta TEXT NOT NULL DEFAULT '{}',
   PRIMARY KEY (room_id, stage_index)
 );
 
@@ -114,6 +115,8 @@ export function openDb(file: string): DB {
   if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
   const db = new DatabaseSync(file);
   db.exec(SCHEMA);
+  const stageCols = db.prepare('PRAGMA table_info(room_stages)').all() as { name: string }[];
+  if (!stageCols.some((c) => c.name === 'meta')) db.exec("ALTER TABLE room_stages ADD COLUMN meta TEXT NOT NULL DEFAULT '{}'");
   return db;
 }
 
@@ -136,11 +139,11 @@ function insertSeed(db: DB, rooms: Room[], clusters: Cluster[], batches: Batch[]
   db.exec('BEGIN');
   try {
     const insertRoom = db.prepare('INSERT INTO rooms (id,name,area,region,vdc,line,tenants,owner,plan_count,note,blocker,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
-    const insertStage = db.prepare('INSERT INTO room_stages (room_id,stage_index,status,fields) VALUES (?,?,?,?)');
+    const insertStage = db.prepare('INSERT INTO room_stages (room_id,stage_index,status,fields,meta) VALUES (?,?,?,?,?)');
     const insertEnv = db.prepare('INSERT INTO room_env_items (room_id,key,name,category,status,custom,sort) VALUES (?,?,?,?,?,?,?)');
     for (const room of rooms) {
       insertRoom.run(room.id, room.name, room.area, room.region, room.vdc, room.line, JSON.stringify(room.tenants), room.owner, room.planCount, room.note, room.blocker, now, now);
-      for (const stage of room.stages) insertStage.run(room.id, stage.index, stage.status, JSON.stringify(stage.fields));
+      for (const stage of room.stages) insertStage.run(room.id, stage.index, stage.status, JSON.stringify(stage.fields), JSON.stringify(stage.meta ?? {}));
       for (const item of room.envItems) insertEnv.run(room.id, item.key, item.name, item.category, item.status, item.custom ? 1 : 0, item.sort);
     }
     for (const batch of batches) {
@@ -176,7 +179,7 @@ export function loadRooms(db: DB): Room[] {
   const stagesByRoom = new Map<string, BuildoutStage[]>();
   for (const row of stageRows) {
     const list = stagesByRoom.get(row.room_id) ?? [];
-    list.push({ index: row.stage_index, status: row.status, fields: parseJson(row.fields, {}) });
+    list.push({ index: row.stage_index, status: row.status, fields: parseJson(row.fields, {}), meta: parseJson(row.meta, {}) });
     stagesByRoom.set(row.room_id, list);
   }
   const envByRoom = new Map<string, EnvItem[]>();

@@ -209,13 +209,13 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
     try {
       db.prepare('INSERT INTO rooms (id,name,area,region,vdc,line,tenants,owner,plan_count,note,blocker,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
         .run(id, input.name, input.area, input.region ?? '待确认', input.vdc ?? null, input.line, JSON.stringify(input.tenants), input.owner, input.planCount ?? null, input.note, '', now, now);
-      const insertStage = db.prepare('INSERT INTO room_stages (room_id,stage_index,status,fields) VALUES (?,?,?,?)');
+      const insertStage = db.prepare('INSERT INTO room_stages (room_id,stage_index,status,fields,meta) VALUES (?,?,?,?,?)');
       ROOM_STAGES.forEach((def, index) => {
         const fields: Record<string, string> = {};
         for (const item of def.items) {
           if (index === 0 && input.fields[item.id]) fields[item.id] = input.fields[item.id];
         }
-        insertStage.run(id, index, 'todo', JSON.stringify(fields));
+        insertStage.run(id, index, 'todo', JSON.stringify(fields), '{}');
       });
       const insertEnv = db.prepare('INSERT INTO room_env_items (room_id,key,name,category,status,custom,sort) VALUES (?,?,?,?,?,?,?)');
       ENV_TEMPLATES.forEach((tpl, i) => insertEnv.run(id, tpl.key, tpl.name, tpl.category, 'pending', 0, i));
@@ -316,6 +316,24 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
     db.prepare('UPDATE room_stages SET fields=? WHERE room_id=? AND stage_index=?').run(JSON.stringify(fields), id, stageIndex);
     db.prepare('UPDATE rooms SET updated_at=? WHERE id=?').run(new Date().toISOString(), id);
     writeAudit(db, operatorOf(request.headers as any), 'room', id, 'set_stage_field', { stageIndex, itemId: body.data.itemId, value: body.data.value });
+    return roomDetail(db, id, today());
+  });
+
+  app.patch('/api/rooms/:id/stages/:index/meta', async (request) => {
+    const { id, index } = request.params as { id: string; index: string };
+    const existing = loadRooms(db).find((r) => r.id === id);
+    if (!existing) throw new ApiError(404, 'room_not_found', '机房不存在');
+    const stageIndex = Number(index);
+    if (!ROOM_STAGES[stageIndex]) throw new ApiError(400, 'invalid_stage', '阶段不存在');
+    const body = z.object({ key: z.enum(['owner', 'plan', 'done', 'note']), value: z.string().max(300) }).safeParse(request.body);
+    if (!body.success) throw body.error;
+    const stage = existing.stages.find((s) => s.index === stageIndex);
+    const meta = { ...(stage?.meta ?? {}) };
+    if (body.data.value.trim()) meta[body.data.key] = body.data.value.trim();
+    else delete meta[body.data.key];
+    db.prepare('UPDATE room_stages SET meta=? WHERE room_id=? AND stage_index=?').run(JSON.stringify(meta), id, stageIndex);
+    db.prepare('UPDATE rooms SET updated_at=? WHERE id=?').run(new Date().toISOString(), id);
+    writeAudit(db, operatorOf(request.headers as any), 'room', id, 'set_stage_meta', { stageIndex, ...body.data });
     return roomDetail(db, id, today());
   });
 
