@@ -1,14 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'node:path';
 
 export default defineConfig({
   root: 'web',
   plugins: [react()],
   resolve: {
     alias: {
-      '@shared': path.resolve(__dirname, 'shared'),
-      '@': path.resolve(__dirname, 'web/src'),
+      '@shared': new URL('./shared', import.meta.url).pathname,
+      '@': new URL('./web/src', import.meta.url).pathname,
     },
   },
   build: { outDir: '../dist/web', emptyOutDir: true },

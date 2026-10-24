@@ -90,11 +90,20 @@ describe('机房写接口', () => {
     expect(body.room.currentStage).toBe(2);
   });
 
-  it('阶段六完成时自动补验收日期', async () => {
-    const res = await app.inject({ method: 'PUT', url: '/api/rooms/hhdh/stages/5', headers: op, payload: { status: 'done' } });
-    expect(res.statusCode).toBe(200);
-    const body = res.json();
+  it('六个阶段全部完成后自动补验收日期', async () => {
+    for (const index of [2, 3, 4, 5]) {
+      const res = await app.inject({ method: 'PUT', url: `/api/rooms/hhdh/stages/${index}`, headers: op, payload: { status: 'done' } });
+      expect(res.statusCode).toBe(200);
+    }
+    const detail = await app.inject({ url: '/api/rooms/hhdh' });
+    const body = detail.json();
     expect(body.room.deliveredDate).toBe('2026-10-24');
+    expect(body.room.phase).toBe('past');
+    // 重新打开任一环节，交付日期必须清空
+    await app.inject({ method: 'PUT', url: '/api/rooms/hhdh/stages/2', headers: op, payload: { status: 'doing' } });
+    const reopened = await app.inject({ url: '/api/rooms/hhdh' });
+    expect(reopened.json().room.deliveredDate).toBeNull();
+    expect(reopened.json().room.phase).toBe('present');
   });
 
   it('子项写入后可按日期推导启动时间', async () => {
@@ -174,6 +183,25 @@ describe('集群写接口', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json().cluster.blocker).toBe('新的阻塞');
     expect(res.json().cluster.risk.level).toBe('err');
+  });
+
+  it('重命名集群会拒绝同机房重名', async () => {
+    const res = await app.inject({ method: 'PATCH', url: '/api/clusters/wlby-core', headers: op, payload: { name: 'phlox-wlby' } });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().error.code).toBe('duplicate_cluster_name');
+  });
+
+  it('非法日期被拒绝', async () => {
+    const stage = await app.inject({ method: 'PATCH', url: '/api/rooms/wlby/stages/0/fields', headers: op, payload: { itemId: 'ko-plan', value: '2026-13-45' } });
+    expect(stage.statusCode).toBe(400);
+    const cluster = await app.inject({ method: 'PATCH', url: '/api/clusters/wlby-core', headers: op, payload: { startDate: '2026-02-31' } });
+    expect(cluster.statusCode).toBe(400);
+  });
+
+  it('audit limit 非法时返回 400', async () => {
+    const res = await app.inject({ url: '/api/audit?limit=abc' });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.code).toBe('invalid_limit');
   });
 
   it('删除机房级联删除集群', async () => {

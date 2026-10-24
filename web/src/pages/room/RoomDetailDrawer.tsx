@@ -577,6 +577,7 @@ export default function RoomDetailDrawer({ roomId, initialClusterId, onClose, on
           ) : null}
           {room && activeCluster ? (
             <ClusterDetailPanel
+              key={activeCluster.id}
               roomName={room.name}
               cluster={activeCluster}
               stages={clusterStages}

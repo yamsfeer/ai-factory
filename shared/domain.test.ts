@@ -77,7 +77,7 @@ describe('机房阶段推导', () => {
   });
 
   it('日期来自阶段子项，不单独存储', () => {
-    const r = withStatuses(['done', 'done', 'todo', 'todo', 'todo', 'done']);
+    const r = withStatuses(['done', 'done', 'done', 'done', 'done', 'done']);
     r.stages[0].fields['ko-plan'] = '2026-02-01';
     r.stages[0].fields['deploy-estimate'] = '2026-03-01';
     r.stages[5].fields['acceptance'] = '2026-03-05';
@@ -112,6 +112,16 @@ describe('阶段（过去/现在/未来）推导', () => {
   });
 });
 
+describe('阻塞优先于阶段', () => {
+  it('未来的阻塞实体状态是有阻塞', () => {
+    const r = withStatuses(['todo', 'todo', 'todo', 'todo', 'todo', 'todo']);
+    r.stages[0].fields['ko-plan'] = '2027-03-01';
+    r.blocker = '等电力';
+    expect(roomPhase(r, '2026-10-24')).toBe('future');
+    expect(roomStatus(r, '2026-10-24')).toBe('blocked');
+  });
+});
+
 describe('集群派生', () => {
   it('六个环节全部完成才算已交付', () => {
     const done = cluster({ delivery: Array.from({ length: 6 }, (_, index) => ({ index, status: 'done' as const, checks: {} })), deliveredDate: '2026-10-09' });
@@ -124,6 +134,11 @@ describe('集群派生', () => {
     const planned = cluster({ startDate: '2026-11-05', planEndDate: '2026-12-01' });
     expect(clusterPhase(planned, '2026-10-24')).toBe('future');
     expect(clusterStatus(planned, '2026-10-24')).toBe('planned');
+  });
+
+  it('第一个环节进行中时状态是在建而不是待启动', () => {
+    const c = cluster({ startDate: '2026-10-01', delivery: [{ index: 0, status: 'doing', checks: {} }, ...Array.from({ length: 5 }, (_, i) => ({ index: i + 1, status: 'todo' as const, checks: {} }))] });
+    expect(clusterStatus(c, '2026-10-24')).toBe('building');
   });
 
   it('有阻塞时状态优先显示为 blocked', () => {

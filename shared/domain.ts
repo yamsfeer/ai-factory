@@ -39,9 +39,8 @@ export function roomTargetDate(room: Room): string | null {
   return room.stages[0]?.fields['deploy-estimate'] || null;
 }
 export function roomDeliveredDate(room: Room): string | null {
-  const done = stageStatus(room, 5) === 'done';
-  const acceptance = room.stages[5]?.fields['acceptance'];
-  return done ? acceptance || null : null;
+  if (currentStageOf(room) < ROOM_STAGES.length) return null;
+  return room.stages[5]?.fields['acceptance'] || null;
 }
 
 export function stageStatus(room: Room, index: number): StageStatus {
@@ -75,8 +74,9 @@ export function roomPhase(room: Room, today: string): Phase {
 export function roomStatus(room: Room, today: string): RoomStatus {
   const phase = roomPhase(room, today);
   if (phase === 'past') return 'delivered';
+  if (room.blocker) return 'blocked';
   if (phase === 'future') return 'planned';
-  return room.blocker ? 'blocked' : 'building';
+  return 'building';
 }
 
 export function roomDuration(room: Room, today: string) {
@@ -106,9 +106,10 @@ export function clusterPhase(cluster: Cluster, today: string): Phase {
 export function clusterStatus(cluster: Cluster, today: string): ClusterStatus {
   const phase = clusterPhase(cluster, today);
   if (phase === 'past') return 'delivered';
-  if (phase === 'future') return 'planned';
   if (cluster.blocker) return 'blocked';
-  if (clusterStageIndex(cluster) === 0 && cluster.startDate && cluster.startDate <= today) return 'pending';
+  if (phase === 'future') return 'planned';
+  const firstStage = cluster.delivery[0]?.status ?? 'todo';
+  if (firstStage === 'todo' && cluster.startDate && cluster.startDate <= today) return 'pending';
   return 'building';
 }
 

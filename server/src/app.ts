@@ -37,6 +37,13 @@ const operatorOf = (headers: Record<string, unknown>): string => {
   }
 };
 
+const isCalendarDate = (value: string): boolean => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(value + 'T00:00:00Z');
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+};
+const dateString = z.string().refine(isCalendarDate, '日期必须是有效的 YYYY-MM-DD');
+
 function roomDetail(db: DB, id: string, today: string) {
   const room = loadRooms(db).find((r) => r.id === id);
   if (!room) throw new ApiError(404, 'room_not_found', '机房不存在');
@@ -74,11 +81,11 @@ function filterRooms(db: DB, today: string, params: URLSearchParams): RoomView[]
   return roomViews(db, today)
     .map((room) => {
       const mine = allClusters.filter((c) => c.roomId === room.id);
-      const scoped = mine.filter((c) => (!type || c.type === type) && (!tenant || c.tenant === tenant || room.tenants.includes(tenant)));
+      const scoped = mine.filter((c) => (!type || c.type === type) && (!tenant || c.tenant === tenant));
       if (!narrowed) return { room, mine, scoped };
       const byStatus = (status: string) => scoped.filter((c) => c.status === status).length;
       const delivered = byStatus('delivered');
-      const planned = scoped.length;
+      const planned = room.summary.planned;
       return {
         room: {
           ...room,
@@ -90,7 +97,7 @@ function filterRooms(db: DB, today: string, params: URLSearchParams): RoomView[]
             building: scoped.filter((c) => c.status === 'building' || c.status === 'pending').length,
             pending: byStatus('pending'),
             plannedClusters: byStatus('planned'),
-            pct: planned > 0 ? Math.round((delivered / planned) * 100) : null,
+            pct: planned && planned > 0 ? Math.round((delivered / planned) * 100) : null,
             narrowed: true,
           },
         },
@@ -325,7 +332,7 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
     if (!body.success) throw body.error;
     const stage = existing.stages.find((s) => s.index === stageIndex);
     const fields = { ...(stage?.fields ?? {}) };
-    if (stageIndex === 5 && body.data.status === 'done' && !fields['acceptance']) fields['acceptance'] = today();
+    if (stageIndex === 5 && (body.data.status === 'done' || body.data.status === 'skip') && !fields['acceptance']) fields['acceptance'] = today();
     db.prepare('UPDATE room_stages SET status=?, fields=? WHERE room_id=? AND stage_index=?')
       .run(body.data.status, JSON.stringify(fields), id, stageIndex);
     db.prepare('UPDATE rooms SET updated_at=? WHERE id=?').run(new Date().toISOString(), id);
@@ -342,7 +349,11 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
     if (!def) throw new ApiError(400, 'invalid_stage', '阶段不存在');
     const body = z.object({ itemId: z.string(), value: z.string().max(400) }).safeParse(request.body);
     if (!body.success) throw body.error;
-    if (!def.items.some((item) => item.id === body.data.itemId)) throw new ApiError(400, 'invalid_item', '该阶段没有这个子项');
+    const itemDef = def.items.find((item) => item.id === body.data.itemId);
+    if (!itemDef) throw new ApiError(400, 'invalid_item', '该阶段没有这个子项');
+    if (itemDef.type === 'date' && body.data.value.trim() && !isCalendarDate(body.data.value.trim())) {
+      throw new ApiError(400, 'invalid_date', `${itemDef.label}必须是有效日期（YYYY-MM-DD）`);
+    }
     const stage = existing.stages.find((s) => s.index === stageIndex);
     const fields = { ...(stage?.fields ?? {}) };
     if (body.data.value.trim()) fields[body.data.itemId] = body.data.value.trim();
@@ -422,8 +433,8 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
         tenant: z.string().trim().max(20).default('待确认'),
         owner: z.string().trim().max(20).default('待确认'),
         vdc: z.string().trim().max(20).nullable().optional(),
-        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
-        planEndDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+        startDate: dateString.nullable().optional(),
+        planEndDate: dateString.nullable().optional(),
         group: z.string().trim().max(30).nullable().optional(),
         slaDays: z.number().int().min(0).nullable().optional(),
         batchId: z.string().trim().nullable().optional(),
@@ -477,9 +488,9 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
         owner: z.string().trim().max(20).optional(),
         vdc: z.string().trim().max(20).nullable().optional(),
         group: z.string().trim().max(30).nullable().optional(),
-        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
-        planEndDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
-        deliveredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+        startDate: dateString.nullable().optional(),
+        planEndDate: dateString.nullable().optional(),
+        deliveredDate: dateString.nullable().optional(),
         slaDays: z.number().int().min(0).nullable().optional(),
         blocker: z.string().trim().max(200).optional(),
         next: z.string().trim().max(200).optional(),
@@ -489,6 +500,10 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
       .safeParse(request.body);
     if (!body.success) throw body.error;
     const p = body.data;
+    if (p.name && p.name !== existing.name) {
+      const dup = db.prepare('SELECT id FROM clusters WHERE room_id = ? AND name = ? AND id <> ?').get(existing.roomId, p.name, id);
+      if (dup) throw new ApiError(409, 'duplicate_cluster_name', '该机房下已有同名集群');
+    }
     db.prepare('UPDATE clusters SET name=?, type=?, tenant=?, owner=?, vdc=?, group_name=?, start_date=?, plan_end_date=?, delivered_date=?, sla_days=?, blocker=?, next=?, risk=?, batch_id=?, updated_at=? WHERE id=?')
       .run(
         p.name ?? existing.name,
@@ -535,11 +550,9 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
     if (body.data.status === 'done') def.subItems.forEach((item) => (checks[item.key] = true));
     db.prepare('UPDATE delivery_stages SET status=?, checks=? WHERE cluster_id=? AND stage_index=?')
       .run(body.data.status, JSON.stringify(checks), id, stageIndex);
-    let deliveredDate = existing.deliveredDate;
     const stages = existing.delivery.map((s) => (s.index === stageIndex ? { ...s, status: body.data.status } : s));
     const allDone = stages.every((s) => s.status === 'done' || s.status === 'skip');
-    if (allDone && !deliveredDate) deliveredDate = today();
-    if (!allDone && deliveredDate && stageIndex === 5) deliveredDate = null;
+    const deliveredDate = allDone ? existing.deliveredDate ?? today() : null;
     db.prepare('UPDATE clusters SET delivered_date=?, updated_at=? WHERE id=?').run(deliveredDate, new Date().toISOString(), id);
     writeAudit(db, operatorOf(request.headers as any), 'cluster', id, 'set_delivery_status', { stageIndex, status: body.data.status });
     return clusterDetail(db, id, today());
@@ -651,7 +664,9 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
 
   app.get('/api/audit', async (request) => {
     const params = new URLSearchParams(request.query as Record<string, string>);
-    return listAudit(db, params.get('entity') ?? undefined, params.get('entityId') ?? undefined, Number(params.get('limit') ?? 50));
+    const parsed = z.coerce.number().int().min(1).max(200).default(50).safeParse(params.get('limit') ?? 50);
+    if (!parsed.success) throw new ApiError(400, 'invalid_limit', 'limit 必须是 1-200 的整数');
+    return listAudit(db, params.get('entity') ?? undefined, params.get('entityId') ?? undefined, parsed.data);
   });
 
   return { app, db };
