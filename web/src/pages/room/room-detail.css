@@ -1,0 +1,154 @@
+/* 机房详情抽屉：原型没有的交互状态（风险条、确认、编辑表单、集群清单）。
+   只使用设计系统既有的 CSS 变量与类名体系，不覆盖原型样式。 */
+
+/* 抽屉头部操作 */
+.rbd-head-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.rbd-head-actions .btn { white-space: nowrap; }
+.rbd-danger { color: var(--err); }
+.rbd-danger:hover { color: var(--err); background: var(--err-soft); border-color: var(--err-border); }
+
+/* 风险提示 */
+.rbd-risk {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  border: 1px solid var(--warn-border);
+  border-radius: 8px;
+  background: var(--warn-soft);
+  color: var(--warn-text);
+}
+.rbd-risk > .mat { color: var(--warn); font-size: 18px; margin-top: 1px; }
+.rbd-risk b { display: block; color: var(--warn-text); font-size: 12px; }
+.rbd-risk p { margin: 3px 0 0; color: var(--text-2); font-size: 11.5px; line-height: 1.6; }
+.rbd-risk.err { border-color: var(--err-border); background: var(--err-soft); }
+.rbd-risk.err > .mat, .rbd-risk.err b { color: var(--err); }
+
+/* Facts 补充提示 */
+.rbd-fact-hint { display: block; margin-top: 4px; color: var(--text-3); font-size: 10.5px; }
+
+/* 编辑 / 确认面板 */
+.rbd-panel {
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.rbd-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.rbd-panel-head b { color: var(--text-1); font-size: 13px; }
+.rbd-panel-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.rbd-panel-foot span { color: var(--text-3); font-size: 10.5px; }
+.rbd-confirm {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--err-border);
+  border-radius: 9px;
+  background: var(--err-soft);
+  color: var(--err);
+}
+.rbd-confirm > .mat { font-size: 18px; margin-top: 1px; }
+.rbd-confirm div { flex: 1; min-width: 0; }
+.rbd-confirm b { display: block; color: var(--err); font-size: 12px; }
+.rbd-confirm p { margin: 3px 0 0; color: var(--text-2); font-size: 11.5px; line-height: 1.6; }
+.rbd-confirm-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* 阶段面板头部说明 */
+.rbd-stage-meaning { display: block; max-width: 520px; margin-top: 5px; color: var(--text-3); font-size: 11px; line-height: 1.55; }
+.rbd-panel-section-note { margin: 0; color: var(--text-3); font-size: 11px; line-height: 1.6; }
+
+/* 左侧导航：机房内集群标题可点击进入清单 */
+.rbd-nav-head-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rbd-nav-head-btn span { color: var(--text-3); font-weight: 500; }
+.rbd-nav-head-btn:hover { color: var(--primary); }
+.rbd-nav-head-btn.active { color: var(--primary); }
+.rbd-nav-head-btn.active span { color: var(--primary); }
+.rbd-nav-head-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 4px; }
+
+/* 集群清单 */
+.rbd-cluster-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.rbd-cluster-toolbar span { color: var(--text-3); font-size: 11px; }
+.rbd-cluster-list { display: flex; flex-direction: column; gap: 8px; }
+.rbd-cluster-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.rbd-cluster-row:hover { border-color: var(--primary-border); background: var(--primary-soft); }
+.rbd-cluster-row:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.rbd-cluster-row b { display: block; color: var(--text-1); font-size: 12.5px; overflow-wrap: anywhere; }
+.rbd-cluster-row small { display: block; margin-top: 4px; color: var(--text-3); font-size: 10.5px; }
+.rbd-cluster-row-meta { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; color: var(--text-3); font-size: 10.5px; }
+.rbd-cluster-blocker { display: inline-flex; align-items: center; gap: 4px; color: var(--err); font-size: 10.5px; }
+.rbd-cluster-blocker .mat { font-size: 14px; }
+
+/* 环境项：自定义项删除 */
+.rbd-env-block { position: relative; }
+.rbd-env-del {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.rbd-env-del:hover { background: var(--panel); color: var(--err); }
+.rbd-env-del .mat { font-size: 14px; }
+.rbd-env-add { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto; }
+
+/* 集群阶段子项勾选 */
+.rbd-check-list { display: flex; flex-direction: column; gap: 7px; padding: 4px 12px 12px; }
+.rbd-check-list label {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: var(--text-2);
+  font-size: 11.5px;
+  line-height: 1.55;
+  cursor: pointer;
+}
+.rbd-check-list label.is-done { color: var(--ok-text); }
+.rbd-check-list input { margin-top: 2px; accent-color: var(--primary); cursor: pointer; }
+.rbd-check-list input:disabled { cursor: default; }
+.rbd-sub-note { display: block; margin-top: 2px; color: var(--text-3); font-size: 10px; }
+
+/* 小屏：抽屉头部操作换行 */
+@media (max-width: 900px) {
+  .rb-drawer-head { flex-wrap: wrap; }
+  .rbd-head-actions { width: 100%; justify-content: flex-end; }
+}
+
+/* 阶段面板中的业务集群卡片可点击进入详情 */
+.rb-sp-cluster { cursor: pointer; text-align: left; font: inherit; }
+.rb-sp-cluster:hover { border-color: var(--primary-border); background: var(--primary-soft); }
+.rb-sp-cluster:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.rb-sp-cluster b { min-width: 0; overflow-wrap: anywhere; }

@@ -150,7 +150,6 @@ const CLUSTER_SPECS: ClusterSpec[] = [
   { id: 'syd2a-normal01', roomId: 'syd2a', name: 'Normal01', group: 'Normal01', type: '微服务', tenant: 'Seed', owner: '待确认', slaDays: 3, stage: 6, start: '2026-10-08', planEnd: '2026-10-08', delivered: '2026-10-10', next: '六阶段流程已完成', batchId: 'syd2a-b1' },
   { id: 'syd2a-bernard', roomId: 'syd2a', name: 'Bernard-Prod', group: 'Bernard-Prod', type: '推理', tenant: 'TCE', owner: '待确认', slaDays: 3, stage: 6, start: '2026-10-08', planEnd: '2026-10-08', delivered: '2026-10-10', next: '六阶段流程已完成', batchId: 'syd2a-b2' },
   { id: 'syd2a-candy', roomId: 'syd2a', name: 'Candy', group: 'Candy', type: '推理', tenant: 'Seed', owner: '待确认', slaDays: 3, stage: 4, start: '2026-10-13', planEnd: '2026-10-30', next: '完成交付前检查', risk: { level: 'warn', short: '检查待复核', text: '交付前检查发现 2 项待复核，暂不能进入后置通知' }, batchId: 'syd2a-b2' },
-  { id: 'syd2a-edge', roomId: 'syd2a', name: 'edge-syd2a', group: 'Edge', type: '微服务', tenant: 'TCE', owner: '曲强', slaDays: 3, stage: 2, start: '2026-10-20', planEnd: '2026-11-10', next: '推进 BKE 创建', batchId: 'syd2a-b2' },
 
   { id: 'hhdh-train01', roomId: 'hhdh', name: 'seed-hhdh-train-01', group: 'Train', type: '训练', tenant: 'Seed', owner: '彭康熙', slaDays: 5, stage: 1, start: '2026-10-09', planEnd: '2026-12-20', next: '跟进机房电力交付；同步完成机器 list 与规格确认', risk: { level: 'warn', short: '电力依赖', text: '等待机房电力就绪（计划 2026-11-20），资源准备与机器重装暂不能关闭' }, batchId: 'hhdh-train-b1' },
   { id: 'hhdh-train02', roomId: 'hhdh', name: 'seed-hhdh-train-02', group: 'Train', type: '训练', tenant: 'Seed', owner: '彭康熙', slaDays: 5, stage: 1, start: '2026-10-09', planEnd: '2026-12-20', next: '与 train-01 合并推进机器调转', risk: { level: 'warn', short: '电力依赖', text: '与 train-01 共用机房电力节点，等待 2026-11-20 就绪' }, batchId: 'hhdh-train-b1' },
@@ -198,6 +197,8 @@ function buildDelivery(stage: number, subCounts: number[]): DeliveryStage[] {
 
 const SUB_COUNTS = [3, 4, 1, 5, 1, 1];
 
+const NEW_FIRST_ROOMS = new Set(['wlby', 'syd2a', 'hhdh', 'wuhan']);
+
 export function buildSeed(): { rooms: Room[]; clusters: Cluster[]; batches: Batch[] } {
   const now = '2026-10-24T00:00:00.000Z';
   const rooms: Room[] = ROOM_SPECS.map((spec) => ({
@@ -236,7 +237,7 @@ export function buildSeed(): { rooms: Room[]; clusters: Cluster[]; batches: Batc
     blocker: spec.blocker ?? '',
     next: spec.next,
     risk: spec.risk ?? null,
-    origin: spec.batchId ? 'batch' : 'existing-add',
+    origin: NEW_FIRST_ROOMS.has(spec.roomId) ? 'new-first' : 'existing-add',
     createdAt: now,
     updatedAt: now,
   }));

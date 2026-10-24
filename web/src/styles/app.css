@@ -28,3 +28,6 @@
 @keyframes af-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 
 .af-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 原型侧栏是 button，复刻用 NavLink（a）：补回 button 的 line-height，保持 31px 行高。 */
+a.sidebar-item { line-height: normal; }

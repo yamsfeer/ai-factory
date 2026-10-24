@@ -69,16 +69,38 @@ function filterRooms(db: DB, today: string, params: URLSearchParams): RoomView[]
   const tenant = params.get('tenant') || '';
   const phase = params.get('phase') || '';
   const query = (params.get('query') || '').trim().toLowerCase();
+  const narrowed = Boolean(type || tenant);
   const allClusters = clusterViews(db, today);
   return roomViews(db, today)
     .map((room) => {
       const mine = allClusters.filter((c) => c.roomId === room.id);
-      return { room: { ...room, summary: { ...room.summary, narrowed: Boolean(type || tenant) } }, mine };
+      const scoped = mine.filter((c) => (!type || c.type === type) && (!tenant || c.tenant === tenant || room.tenants.includes(tenant)));
+      if (!narrowed) return { room, mine, scoped };
+      const byStatus = (status: string) => scoped.filter((c) => c.status === status).length;
+      const delivered = byStatus('delivered');
+      const planned = scoped.length;
+      return {
+        room: {
+          ...room,
+          summary: {
+            recorded: scoped.length,
+            planned,
+            delivered,
+            blocked: byStatus('blocked'),
+            building: scoped.filter((c) => c.status === 'building' || c.status === 'pending').length,
+            pending: byStatus('pending'),
+            plannedClusters: byStatus('planned'),
+            pct: planned > 0 ? Math.round((delivered / planned) * 100) : null,
+            narrowed: true,
+          },
+        },
+        mine,
+        scoped,
+      };
     })
-    .filter(({ room, mine }) => !area || room.area === area)
-    .filter(({ mine }) => !type || mine.some((c) => c.type === type))
-    .filter(({ room, mine }) => !tenant || room.tenants.includes(tenant) || mine.some((c) => c.tenant === tenant))
-    .filter(({ room, mine }) => !phase || room.phase === phase)
+    .filter(({ room }) => !area || room.area === area)
+    .filter(({ room, scoped }) => !narrowed || scoped.length > 0 || (Boolean(tenant) && room.tenants.includes(tenant)))
+    .filter(({ room }) => !phase || room.phase === phase)
     .filter(({ room, mine }) => !query || matchesQuery(room, mine, query))
     .map(({ room }) => room);
 }
@@ -89,6 +111,7 @@ function filterClusters(db: DB, today: string, params: URLSearchParams): Cluster
   const type = params.get('type') || '';
   const tenant = params.get('tenant') || '';
   const status = params.get('status') || '';
+  const origin = params.get('origin') || '';
   const query = (params.get('query') || '').trim().toLowerCase();
   const rooms = new Map(loadRooms(db).map((r) => [r.id, r]));
   return clusterViews(db, today)
@@ -97,6 +120,7 @@ function filterClusters(db: DB, today: string, params: URLSearchParams): Cluster
     .filter((c) => !type || c.type === type)
     .filter((c) => !tenant || c.tenant === tenant || rooms.get(c.roomId)?.tenants.includes(tenant))
     .filter((c) => !status || c.status === status)
+    .filter((c) => !origin || origin === 'all' || c.origin === origin)
     .filter((c) => !query || [c.name, c.roomName, c.owner, c.tenant, c.blocker, c.next].join(' ').toLowerCase().includes(query));
 }
 
@@ -129,7 +153,7 @@ function batchViews(db: DB, today: string, params: URLSearchParams) {
     });
 }
 
-const CSV_HEADERS = ['机房', '集群', '集群组', '类型', '业务方', '负责人', 'VDC', '交付阶段', '状态', '开始日期', '计划完成', '实际交付', '耗时(天)', 'SLA(天)', '超期(天)', '阻塞', '下一步'];
+const CSV_HEADERS = ['机房', '集群', '集群组', '类型', '业务方', '负责人', 'VDC', '交付阶段', '状态', '开始日期', '计划完成', '实际交付', '耗时(天)', 'SLA(天)', '超期(天)', '阻塞', '下一步', '交付来源'];
 const csvCell = (value: unknown) => {
   const text = value === null || value === undefined ? '' : String(value);
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -141,6 +165,16 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
 
   const app = Fastify({ logger: false, bodyLimit: 2 * 1024 * 1024 });
   const today = () => options.today ?? todayISO();
+  // 允许 DELETE / 无 body 的请求携带 application/json（浏览器与 curl 常见）。
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (_request, body, done) => {
+    const text = String(body ?? '').trim();
+    if (!text) return done(null, {});
+    try {
+      done(null, JSON.parse(text));
+    } catch (error) {
+      done(error as Error, undefined);
+    }
+  });
 
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof ApiError) return reply.status(error.status).send({ error: { code: error.code, message: error.message } });
@@ -393,6 +427,7 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
         group: z.string().trim().max(30).nullable().optional(),
         slaDays: z.number().int().min(0).nullable().optional(),
         batchId: z.string().trim().nullable().optional(),
+        origin: z.enum(['new-first', 'existing-add']).default('new-first'),
       })
       .safeParse(request.body);
     if (!body.success) throw body.error;
@@ -403,7 +438,7 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
     db.exec('BEGIN');
     try {
       db.prepare('INSERT INTO clusters (id,room_id,batch_id,name,group_name,type,tenant,owner,vdc,start_date,plan_end_date,delivered_date,sla_days,blocker,next,risk,origin,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-        .run(clusterId, id, input.batchId ?? null, input.name, input.group ?? null, input.type, input.tenant, input.owner, input.vdc ?? room.vdc, input.startDate ?? null, input.planEndDate ?? null, null, input.slaDays ?? null, '', '推进集群六阶段建设', null, 'manual', now, now);
+        .run(clusterId, id, input.batchId ?? null, input.name, input.group ?? null, input.type, input.tenant, input.owner, input.vdc ?? room.vdc, input.startDate ?? null, input.planEndDate ?? null, null, input.slaDays ?? null, '', '推进集群六阶段建设', null, input.origin, now, now);
       const insertStage = db.prepare('INSERT INTO delivery_stages (cluster_id,stage_index,status,checks) VALUES (?,?,?,?)');
       CLUSTER_STAGES.forEach((def, index) => {
         const checks: Record<string, boolean> = {};
@@ -603,6 +638,7 @@ export async function buildApp(options: { dbPath?: string; today?: string } = {}
           c.duration.over,
           c.blocker,
           c.next,
+          c.origin === 'new-first' ? '新机房首批' : '存量机房扩容',
         ]
           .map(csvCell)
           .join(','),

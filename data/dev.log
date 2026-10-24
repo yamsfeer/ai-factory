@@ -1,0 +1,12 @@
+
+> dev
+> concurrently -n api,web -c blue,green "tsx watch server/src/index.ts" "vite"
+
+[web] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[web]   - `__dirname` (vite.config.ts:10:31). Use `import.meta.dirname` instead
+[web] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[web] 
+[web]   VITE v8.3.5  ready in 241 ms
+[web] 
+[web]   ➜  Local:   http://127.0.0.1:5173/
+[api] AI Factory clone listening on http://127.0.0.1:9000

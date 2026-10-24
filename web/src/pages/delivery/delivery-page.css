@@ -1,0 +1,30 @@
+/* 集群交付页补充：只放原型没有覆盖的交互态，不改动原型的类。 */
+
+/* 机房下拉：选项是真实机房全名，限制宽度避免挤压搜索框。 */
+.cd-filterbar select.filt.cd-room-select {
+  width: 200px;
+  max-width: 200px;
+}
+
+/* 时间轴工具条左侧的统计说明（原型此位置是“交付来源”分段，本复刻不提供该维度）。 */
+.cd-tl-toolbar-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-3);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.cd-tl-toolbar-note b {
+  color: var(--text-1);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 空态里的重置操作。 */
+.cd-empty-action {
+  margin-top: 10px;
+}
+.cd-pipeline-empty .empty-state {
+  padding: 26px 20px;
+}

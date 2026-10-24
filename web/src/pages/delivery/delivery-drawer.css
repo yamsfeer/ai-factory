@@ -1,0 +1,94 @@
+/* 集群交付抽屉 / 子项编辑器 / 登记表单 —— 原型未覆盖的状态与控件补充。
+   只使用 design-system / cluster-delivery 已有的 CSS 变量与类名基础。 */
+
+/* ===== 抽屉头部 ===== */
+.delivery-drawer-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.delivery-drawer-actions .btn { gap: 4px; }
+.delivery-drawer-actions .mat { font-size: 15px; }
+.delivery-drawer-crumb { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.delivery-drawer-crumb .mat { font-size: 12px; color: var(--text-3); }
+
+/* ===== 六环节进度条 ===== */
+.delivery-progress-summary { display: flex; flex-direction: column; gap: 8px; }
+.delivery-progress { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+.delivery-progress-step { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; text-align: center; }
+.delivery-progress-step::before { content: ''; position: absolute; top: 9px; left: -50%; z-index: 0; width: 100%; height: 2px; background: var(--border); }
+.delivery-progress-step:first-child::before { display: none; }
+.delivery-progress-step.done::before,
+.delivery-progress-step.current::before { background: var(--primary); }
+.delivery-progress-step.skip::before { background: var(--border); }
+.delivery-progress-dot { position: relative; z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 50%; background: var(--panel); color: var(--text-3); font-size: 9px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.delivery-progress-step.done .delivery-progress-dot { border-color: var(--primary); background: var(--primary); color: #fff; }
+.delivery-progress-step.current .delivery-progress-dot { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.delivery-progress-step.skip .delivery-progress-dot { border-style: dashed; background: var(--bg-2); }
+.delivery-progress-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-3); font-size: 9px; line-height: 1.3; }
+.delivery-progress-step.done .delivery-progress-name { color: var(--text-2); }
+.delivery-progress-step.current .delivery-progress-name { color: var(--primary); font-weight: 600; }
+.delivery-progress-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; color: var(--text-3); font-size: 9.5px; line-height: 1.5; }
+.delivery-progress-meta span:last-child { text-align: right; }
+
+/* ===== 摘要补充 ===== */
+.delivery-span-2 { grid-column: 1 / -1; }
+.delivery-blocker { color: var(--err); font-weight: 500; line-height: 1.5; overflow-wrap: anywhere; }
+.delivery-blocker .mat { margin-right: 4px; font-size: 14px; vertical-align: -3px; }
+.delivery-blocker-cell { border-color: var(--err-border); background: var(--err-soft); }
+.delivery-blocker-cell label { color: var(--err); }
+.delivery-muted { color: var(--text-3); font-weight: 400; }
+.delivery-next { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; padding: 8px 10px; border-radius: 6px; background: var(--primary-soft); color: var(--text-1); font-size: 10.5px; line-height: 1.6; }
+.delivery-next .mat { flex-shrink: 0; margin-top: 1px; color: var(--primary); font-size: 14px; }
+.delivery-next b { font-weight: 600; }
+
+/* ===== 阶段手风琴补充 ===== */
+.cd-stage-acc-dot.skip { border-style: dashed; background: var(--bg-2); color: var(--text-3); }
+.cd-stage-acc-dot.skip::after { content: '—'; font-size: 9px; line-height: 1; }
+.delivery-stage-hint { margin: 8px 0 0; color: var(--text-3); font-size: 9.5px; line-height: 1.5; }
+
+/* ===== 子项行：复选框 + 打开详情 ===== */
+.cd-sub-item.delivery-sub { display: flex; align-items: flex-start; gap: 9px; cursor: default; }
+.cd-sub-item.delivery-sub.todo { color: var(--text-2); }
+.delivery-check { position: relative; display: inline-flex; width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; cursor: pointer; }
+.delivery-check input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.delivery-check-box { display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 50%; background: var(--panel); transition: background .12s, border-color .12s; }
+.delivery-check-box::after { content: '✓'; color: transparent; font-size: 9px; line-height: 1; }
+.delivery-check input:checked + .delivery-check-box { border-color: var(--primary); background: var(--primary); }
+.delivery-check input:checked + .delivery-check-box::after { color: #fff; }
+.delivery-check input:focus-visible + .delivery-check-box { outline: 2px solid var(--primary); outline-offset: 2px; }
+.delivery-check input:disabled + .delivery-check-box { opacity: .5; cursor: not-allowed; }
+.delivery-sub-open { display: flex; flex: 1; align-items: flex-start; gap: 8px; min-width: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.delivery-sub-open:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+.delivery-sub-open .cd-sub-label { display: flex; flex-direction: column; gap: 2px; }
+.cd-sub-item.done .delivery-sub-name { color: var(--text-2); }
+.cd-sub-item.doing .delivery-sub-name { color: var(--text-1); font-weight: 600; }
+
+/* ===== 子项详情二级抽屉 ===== */
+.delivery-sub-block { display: flex; flex-direction: column; gap: 6px; }
+.delivery-sub-block-label { color: var(--text-3); font-size: 9.5px; font-weight: 500; letter-spacing: .02em; }
+.delivery-sub-name-text { margin: 0; color: var(--text-1); font-size: 12px; font-weight: 600; line-height: 1.55; }
+.delivery-sub-meta { margin: 0; color: var(--text-3); font-size: 10.5px; line-height: 1.6; }
+.delivery-detail-list { display: flex; flex-direction: column; gap: 5px; margin: 2px 0 0; padding: 0; list-style: none; }
+.delivery-detail-list li { display: flex; align-items: flex-start; gap: 6px; padding: 5px 8px; border-radius: 5px; background: var(--warn-soft); color: var(--warn-text); font-size: 10px; line-height: 1.45; }
+.delivery-detail-list li::before { content: '•'; flex-shrink: 0; }
+.delivery-sub-state { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid var(--border-2); border-radius: 7px; background: var(--bg); color: var(--text-2); font-size: 10.5px; line-height: 1.5; }
+.delivery-sub-state .mat { flex-shrink: 0; color: var(--text-3); font-size: 17px; }
+.delivery-sub-state.done { border-color: var(--primary-border); background: var(--primary-soft); color: var(--text-1); }
+.delivery-sub-state.done .mat { color: var(--primary); }
+
+/* ===== 编辑集群 ===== */
+.delivery-delete { display: flex; justify-content: flex-start; margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--err-border); }
+.delivery-delete-confirm { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 11px; border: 1px solid var(--err-border); border-radius: 7px; background: var(--err-soft); color: var(--err); font-size: 10.5px; line-height: 1.5; }
+.delivery-delete-actions { display: flex; flex-shrink: 0; align-items: center; gap: 6px; }
+.delivery-btn-danger { border-color: var(--err); background: var(--err); color: #fff; }
+.delivery-btn-danger:hover { background: var(--err-2); border-color: var(--err-2); }
+.delivery-danger-text { color: var(--err); }
+.delivery-danger-text:hover { border-color: var(--err); background: var(--err-soft); color: var(--err); }
+
+/* ===== 登记集群：右侧面板与行内错误 ===== */
+.delivery-register-backdrop { z-index: 1396; }
+.delivery-register { z-index: 1397; }
+.delivery-field-error { color: var(--err); font-size: 10px; line-height: 1.45; }
+.delivery-input-invalid { border-color: var(--err) !important; box-shadow: 0 0 0 2px var(--err-soft) !important; }
+.delivery-required { color: var(--warn-text); font-style: normal; margin-left: 2px; }
+.delivery-form-loading { color: var(--text-3); font-size: 10.5px; line-height: 1.5; }
+.delivery-form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+.delivery-register .cd-drawer-body { padding-bottom: 40px; }
+.delivery-register-sub { display: block; margin-top: 3px; color: var(--text-3); font-size: 10.5px; }
