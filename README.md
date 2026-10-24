@@ -97,7 +97,7 @@ web/src/         React 应用：页面、抽屉、Modal、API 客户端、UI 基
 web/src/styles/  原型 CSS（design-system / tailwind 子集 / 页面样式）
 web/public/fonts 自托管字体
 scripts/         e2e.mjs、proofshot-demo.sh、serve-prod.sh、stop-prod.sh
-docs/            DEVELOPMENT.md（开发指南）、原型逆向盘点、截图基线
+docs/            DEVELOPMENT.md（开发指南）
 .scratch/        本地 issue tracker：spec 与 tickets
 ```
 
@@ -150,4 +150,3 @@ docs/            DEVELOPMENT.md（开发指南）、原型逆向盘点、截图�
 - [开发指南](docs/DEVELOPMENT.md)：从零跑起来、架构、数据表、派生规则、排障
 - [术语表](GLOSSARY.md)
 - [复刻规格](.scratch/ai-factory-clone/spec.md)
-- [原型逆向盘点](docs/prototype-inventory.md)

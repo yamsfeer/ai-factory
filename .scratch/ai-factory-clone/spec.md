@@ -70,7 +70,7 @@ Integration branch: `feat/ai-factory-clone`
 - 单进程：生产模式 Fastify 同时托管 `web/dist` 静态资源与 `/api/*`，只暴露一个端口。
 - 开发模式 Vite 代理 `/api` 到 Fastify。
 - 不使用 Tailwind 构建：原型的 `tailwind.css` 是 55 行手写工具类子集，原样复用。
-- 字体自托管：Inter、Noto Sans SC、Material Symbols 的 woff2 与 @font-face CSS 放进静态资源，不依赖 `miaoda.feishu.cn`。
+- 字体自托管：Inter、Noto Sans SC、Material Symbols 的 woff2 与 @font-face CSS 放进静态资源，不依赖任何第三方字体 CDN。
 
 ### 视觉复刻契约
 
@@ -180,7 +180,7 @@ GET    /api/audit?entity&entityId      → AuditLog[]
 - **领域单元测试**（Vitest，`shared`）：当前阶段推导、阶段/状态推导（含边界：全 skip、无日期、跨年）、耗时与 SLA 计算、时间线月份与条带定位、计划 vs 已录入。
 - **API 集成测试**（Vitest + `fastify.inject` + 临时 SQLite 文件）：每个写路由的成功路径与关键失败路径（重名 409、不存在 404、非法状态 400）、派生字段是否正确、删除级联、CSV 表头与 BOM、操作日志落库。
 - **端到端**（Playwright）：① 打开机房建设页看到 KPI 与清单；② 筛选 + 搜索 + 切 tab；③ 打开机房抽屉、改阶段状态、刷新后仍在；④ 登记机房 → 出现在清单；⑤ 集群交付页切视图、推进阶段、导出 CSV。
-- **视觉验收**：1600px 宽截图与原型的对应状态并排比对；差异只看版式、间距、颜色、字号，不看数据内容。原型的截图基线在 `docs/screenshots/`。
+- **视觉验收**：1600px 宽截图与原型的对应状态并排比对；差异只看版式、间距、颜色、字号，不看数据内容。原型的截图基线在本地保留，不随公开仓库发布。
 
 ## Out of Scope
 
@@ -195,6 +195,6 @@ GET    /api/audit?entity&entityId      → AuditLog[]
 ## Further Notes
 
 - 现有原型仍在 `http://100.105.144.118:8890/index.html` 运行，重构期间保留它作为视觉对照。
-- 原型的 `docs/prototype-inventory.md`（自动清点）是事实来源，实现前先读。
+- 原型的自动清点文档在本地保留（不随公开仓库发布），是事实来源。
 - 验收时用真实"今天"（2026-10-24 起）而非原型写死的 2026-10-18；因此分组数量、耗时天数与原型截图必然不同，这是预期。
 - 若某个原型交互在清点文档中不存在，不要发明；先按现有截图与代码实现。

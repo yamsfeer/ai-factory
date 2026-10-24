@@ -8,3 +8,8 @@ playwright-report/
 test-results/
 
 proofshot-artifacts/
+
+# 公开仓库排除：原型原始素材与内部盘点（仅本地保留）
+site/
+docs/screenshots/
+docs/prototype-inventory.md
