@@ -1,0 +1,30 @@
+/* 复刻新增的最小样式：只用既有 CSS 变量与类名体系。 */
+.topbar-search { width: 300px; }
+.topbar-search input { width: 100%; }
+
+.af-operator { position: relative; }
+.af-operator__panel {
+  position: absolute; right: 0; top: 42px; z-index: 60;
+  width: 240px; padding: 12px;
+  background: var(--bg-elevated, #fff); border: 1px solid var(--border);
+  border-radius: 10px; box-shadow: 0 12px 32px rgba(15, 27, 45, .12);
+}
+.af-operator__panel h4 { margin: 0 0 8px; font-size: 12px; color: var(--text-3); font-weight: 500; }
+.af-operator__panel input { width: 100%; }
+.af-operator__hint { margin-top: 8px; font-size: 11px; color: var(--text-3); line-height: 1.5; }
+
+.af-toasts { position: fixed; right: 20px; bottom: 20px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
+.af-toast {
+  min-width: 240px; max-width: 380px; padding: 10px 12px; border-radius: 10px;
+  background: #0f1b2d; color: #fff; font-size: 13px; line-height: 1.5;
+  box-shadow: 0 10px 30px rgba(15, 27, 45, .25);
+}
+.af-toast.err { background: #b42318; }
+
+.af-loading { padding: 48px 0; text-align: center; color: var(--text-3); font-size: 13px; }
+.af-error { margin: 24px 0; padding: 14px 16px; border: 1px solid var(--danger, #d92d20); border-radius: 10px; color: var(--danger, #d92d20); background: #fff5f4; font-size: 13px; }
+.af-empty { padding: 48px 0; text-align: center; color: var(--text-3); }
+.af-skeleton { background: linear-gradient(90deg, #eef1f5 25%, #f7f9fb 37%, #eef1f5 63%); background-size: 400% 100%; animation: af-shimmer 1.4s ease infinite; border-radius: 8px; }
+@keyframes af-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+.af-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
