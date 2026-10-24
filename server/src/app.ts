@@ -74,7 +74,8 @@ function filterRooms(db: DB, today: string, params: URLSearchParams): RoomView[]
   const area = params.get('area') || '';
   const type = params.get('type') || '';
   const tenant = params.get('tenant') || '';
-  const phase = params.get('phase') || '';
+  const rawPhase = params.get('phase') || '';
+  const phase = rawPhase === 'all' ? '' : rawPhase;
   const query = (params.get('query') || '').trim().toLowerCase();
   const narrowed = Boolean(type || tenant);
   const allClusters = clusterViews(db, today);
