@@ -56,8 +56,17 @@ docs/          原型逆向盘点（prototype-inventory.md）、状态截图、A
 ## 测试
 
 ```bash
-npm test                  # Vitest：领域推导 + API 集成
-npx playwright test       # （如已安装）端到端
+npm test                  # Vitest：领域推导 + API 集成（40 项）
+API_URL=http://127.0.0.1:8891 node scripts/e2e.mjs http://127.0.0.1:8891
+                          # Playwright 端到端：20 步，覆盖两个页面的筛选、抽屉、
+                          # 六阶段、环境项、机房/集群增删改、CSV、操作人，结束后复原数据
+```
+
+录制端到端演示（ProofShot）：
+
+```bash
+APP_URL=http://100.105.144.118:8891 bash scripts/proofshot-demo.sh
+# 产物：/tmp/ai-factory-proof/proofshot-artifacts/<时间>/viewer.html + session.webm
 ```
 
 领域逻辑的单一真源在 `shared/domain.ts`，前后端共用；改推导规则先改这里与测试。
