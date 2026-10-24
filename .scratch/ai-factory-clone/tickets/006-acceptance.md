@@ -1,7 +1,7 @@
 ---
 id: T6
 title: 集成、截图对比修版、E2E、部署到 Tailscale
-status: open
+status: done
 blocked-by: [T3, T4, T5]
 branch: t6-acceptance
 ---

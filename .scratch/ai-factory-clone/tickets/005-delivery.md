@@ -1,7 +1,7 @@
 ---
 id: T5
 title: 集群交付页：批次/集群两视图、供给时间线、表格、详情、CSV
-status: open
+status: done
 blocked-by: [T1, T2]
 branch: t5-delivery
 ---

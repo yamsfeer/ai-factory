@@ -155,10 +155,10 @@ const CLUSTER_SPECS: ClusterSpec[] = [
   { id: 'hhdh-train02', roomId: 'hhdh', name: 'seed-hhdh-train-02', group: 'Train', type: '训练', tenant: 'Seed', owner: '彭康熙', slaDays: 5, stage: 1, start: '2026-10-09', planEnd: '2026-12-20', next: '与 train-01 合并推进机器调转', risk: { level: 'warn', short: '电力依赖', text: '与 train-01 共用机房电力节点，等待 2026-11-20 就绪' }, batchId: 'hhdh-train-b1' },
   { id: 'hhdh-infer01', roomId: 'hhdh', name: 'seed-hhdh-infer-01', group: 'Infer', type: '推理', tenant: 'Flow', owner: '彭康熙', slaDays: null, stage: 0, start: '2026-11-20', planEnd: '2027-01-15', next: '确认需求、VDC、集群组与负责人', batchId: 'hhdh-infer-b1' },
 
-  { id: 'my1a-ms01', roomId: 'my1a', name: 'dola-my1a-01', group: 'Dola', type: '微服务', tenant: 'Flow', owner: '张洋', slaDays: 4, stage: 2, start: '2026-09-01', planEnd: '2026-10-30', next: '完成 BKE 创建', batchId: 'my1a-ms-b1' },
-  { id: 'my1a-ms02', roomId: 'my1a', name: 'lark-my1a-01', group: 'Lark', type: '微服务', tenant: 'Flow', owner: '张洋', slaDays: 4, stage: 2, start: '2026-09-05', planEnd: '2026-10-30', next: '完成 BKE 创建', batchId: 'my1a-ms-b1' },
+  { id: 'my1a-ms01', roomId: 'my1a', name: 'dola-my1a-01', group: 'Dola', type: '微服务', tenant: 'Flow', owner: '张洋', slaDays: 4, stage: 2, start: '2026-10-10', planEnd: '2026-11-20', next: '完成 BKE 创建', batchId: 'my1a-ms-b1' },
+  { id: 'my1a-ms02', roomId: 'my1a', name: 'lark-my1a-01', group: 'Lark', type: '微服务', tenant: 'Flow', owner: '张洋', slaDays: 4, stage: 2, start: '2026-10-12', planEnd: '2026-11-20', next: '完成 BKE 创建', batchId: 'my1a-ms-b1' },
 
-  { id: 'seed-hk-infer01', roomId: 'seed-hk', name: 'seed-hk-infer-01', group: 'Infer', type: '推理', tenant: 'Seed', owner: '刘伟', slaDays: 3, stage: 1, start: '2026-09-25', planEnd: '2026-12-31', next: '准备机器 list 与规格' },
+  { id: 'seed-hk-infer01', roomId: 'seed-hk', name: 'seed-hk-infer-01', group: 'Infer', type: '推理', tenant: 'Seed', owner: '刘伟', slaDays: 3, stage: 1, start: '2026-10-15', planEnd: '2026-12-31', next: '准备机器 list 与规格' },
   { id: 'seed-hk-infer02', roomId: 'seed-hk', name: 'seed-hk-infer-02', group: 'Infer', type: '推理', tenant: 'Seed', owner: '刘伟', slaDays: 3, stage: 6, start: '2026-09-28', planEnd: '2026-10-20', delivered: '2026-10-19', next: '六阶段流程已完成' },
 
   { id: 'wuhan-train01', roomId: 'wuhan', name: 'seed-wuhan-train-01', group: 'Train', type: '训练', tenant: 'Seed', owner: '彭康熙', slaDays: null, stage: 0, start: '2026-11-02', planEnd: '2027-02-10', next: '确认需求、VDC、集群组与负责人', batchId: 'wuhan-train-b1' },
@@ -232,7 +232,8 @@ export function buildSeed(): { rooms: Room[]; clusters: Cluster[]; batches: Batc
     startDate: spec.start,
     planEndDate: spec.planEnd,
     deliveredDate: spec.delivered ?? null,
-    slaDays: spec.slaDays,
+    // 统一按 30 天口径计算超期（原型集群交付页的 SLA 也是常量 30 天）。
+    slaDays: spec.slaDays === null ? null : 30,
     delivery: buildDelivery(spec.stage, SUB_COUNTS),
     blocker: spec.blocker ?? '',
     next: spec.next,

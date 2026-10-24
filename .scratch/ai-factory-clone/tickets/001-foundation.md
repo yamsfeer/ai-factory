@@ -1,7 +1,7 @@
 ---
 id: T1
 title: 地基：仓库脚手架、CSS/字体迁移、领域类型、页面外壳
-status: in-progress
+status: done
 blocked-by: []
 branch: t1-foundation
 ---

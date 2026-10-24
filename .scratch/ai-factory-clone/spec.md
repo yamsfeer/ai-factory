@@ -1,6 +1,6 @@
 # AI Factory 机房建设 / 集群交付 · 全栈复刻
 
-Status: ready-for-agent
+Status: implemented
 Tracker: `.scratch/ai-factory-clone/`
 Integration branch: `feat/ai-factory-clone`
 

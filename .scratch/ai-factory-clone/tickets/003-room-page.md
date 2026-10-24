@@ -1,7 +1,7 @@
 ---
 id: T3
 title: 机房建设页：KPI、三阶段卡、时间线、筛选、机房清单
-status: open
+status: done
 blocked-by: [T1, T2]
 branch: t3-room-page
 ---

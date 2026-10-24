@@ -1,7 +1,7 @@
 ---
 id: T4
 title: 机房详情抽屉 + 登记机房 Modal + 集群登记
-status: open
+status: done
 blocked-by: [T1, T2, T3]
 branch: t4-detail
 ---
