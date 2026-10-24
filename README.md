@@ -1,5 +1,7 @@
 # AI Factory 机房建设 / 集群交付
 
+[![ci](https://github.com/yamsfeer/ai-factory/actions/workflows/ci.yml/badge.svg)](https://github.com/yamsfeer/ai-factory/actions/workflows/ci.yml)
+
 把一份低代码导出的静态原型（机房建设、集群交付两个页面）复刻成可用的全栈应用：视觉与交互按原型 1:1 还原，数据从写死的 JS 搬进 SQLite，所有原型里能点的操作都真正落库。
 
 适合用来参考：如何把一个只有视觉稿/静态原型的产品，快速变成可运行的前后端应用；以及如何用 Playwright + ProofShot 给一次重构留下可回放的验收证据。
